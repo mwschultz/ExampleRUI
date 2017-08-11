@@ -3,21 +3,29 @@ library(dplyr)
 library(ggplot2)
 
 shinyServer(function(input, output, session) {
+	
+newData <- reactive({msleep %>% filter(vore==input$vore)})
+
+output$sleepPlot <- renderPlot({
+	if (input$conservation == TRUE) {
+		g <- ggplot(newData(), aes(x = bodywt, y = sleep_total))
+		g + geom_point(size = input$size, aes(col = conservation))
+	}
+	else {
+		g <- ggplot(newData(), aes(x = bodywt, y = sleep_total))
+		g + geom_point(size = input$size)
+	}
+})
   
-  #create plot
-  output$sleepPlot <- renderPlot({
-		#Temporary plot
-  	hist(rnorm(100))
-  })
 
   #create text info
   output$info <- renderText({
-  	paste("Temporary text")
+  	paste("The average body weight for order", "is", input$vore, round(mean(newData()$bodywt, na.rm = TRUE), 2), "and the average total sleep time is", round(mean(newData()$sleep_total, na.rm = TRUE), 2), sep = " ")
   })
   
   #create output of observations    
   output$table <- renderTable({
-		rnorm(10)
+		select(newData(), name, sleep_total, bodywt)
   })
   
 })
